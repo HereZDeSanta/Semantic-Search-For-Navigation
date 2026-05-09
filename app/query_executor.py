@@ -59,13 +59,13 @@ def execute_bad_position(df: pd.DataFrame):
     
     # Картинка
     from .visualize import plot_route
-    image = plot_route(df, bad, title="Плохое качество позиционирования")
+    image_url = plot_route(df, bad, title="Плохое качество позиционирования")
     
     return {
         "total_points": int(total),
         "percentage_of_trip": round(percent, 1),
         "points": points,
-        "image": image
+        "image": image_url
     }
 
 def execute_time_slice(df: pd.DataFrame, start_hour: int, end_hour: int):
@@ -87,15 +87,15 @@ def execute_time_slice(df: pd.DataFrame, start_hour: int, end_hour: int):
             "horizontal_speed": round(float(row["horizontal_speed"]) * 3.6, 1)
         })
     
-    # Генерируем картинку
+    # Картинка
     from .visualize import plot_route
-    image = plot_route(df, subset, title=f"Точки в интервале {start_hour}:00-{end_hour}:00")
+    image_url = plot_route(df, subset, title=f"Точки в интервале {start_hour}:00-{end_hour}:00")
     
     return {
         "interval": f"{start_hour}:00-{end_hour}:00",
         "total_records": int(len(subset)),
         "points": points,
-        "image": image
+        "image": image_url
     }
     
     # return {
@@ -151,15 +151,16 @@ def execute_braking_events(df: pd.DataFrame, threshold: float):
             "speed_after": round(speed_after, 1)
         })
     
+    # Картирнка
     from .visualize import plot_route
-    image = plot_route(df, events, title=f"Резкое торможение (ускорение < {threshold} м/с²)")
+    image_url = plot_route(df, events, title=f"Резкое торможение (ускорение < {threshold} м/с²)")
     
     return {
         "total_braking_events": int(total),
         "max_deceleration": round(float(max_dec), 2),
         "avg_deceleration": round(float(avg_dec), 2),
         "events": events_list,
-        "image": image
+        "image": image_url
     }
 
 def execute_geo_filter(df: pd.DataFrame, min_lat: float, max_lat: float, min_lon: float, max_lon: float):
@@ -182,8 +183,9 @@ def execute_geo_filter(df: pd.DataFrame, min_lat: float, max_lat: float, min_lon
             "longitude": float(row["longitude"])
         })
     
+    # Картинка
     from .visualize import plot_route
-    image = plot_route(df, subset, title=f"Точки в области: широта [{min_lat}..{max_lat}], долгота [{min_lon}..{max_lon}]")
+    image_url = plot_route(df, subset, title=f"Точки в области: широта [{min_lat}..{max_lat}], долгота [{min_lon}..{max_lon}]")
     
     return {
         "total_points": int(len(subset)),
@@ -192,5 +194,5 @@ def execute_geo_filter(df: pd.DataFrame, min_lat: float, max_lat: float, min_lon
             "latitude": [min_lat, max_lat],
             "longitude": [min_lon, max_lon]
         },
-        "image": image
+        "image": image_url
     }

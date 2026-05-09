@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
 from .models import QueryRequest, GenericResponse
 from .data_loader import load_and_prepare_data
 from .query_parser import parse_query
@@ -9,14 +10,21 @@ from .query_executor import (
     execute_braking_events,
     execute_geo_filter
 )
+
+from .config import M11_BOUNDS, BRAKING_THRESHOLD
 import logging
+import os
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Semantic Search Engine for Navigation Data")
+app = FastAPI(title="Semantic Search for Navigation Data")
 
-# Загружаем данные при старте
+os.makedirs("static/plots", exist_ok=True)
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Загрузка данных при старте
 logger.info("Loading data...")
 df = load_and_prepare_data()
 logger.info(f"Data loaded successfully. Shape: {df.shape}")
@@ -24,7 +32,7 @@ logger.info(f"Data loaded successfully. Shape: {df.shape}")
 @app.get("/")
 async def root():
     return {
-        "message": "Semantic Search Engine for Navigation Data",
+        "message": "Semantic Search for Navigation Data",
         "data_shape": df.shape,
         "available_endpoints": {
             "POST /query": "Send natural language query"
@@ -50,15 +58,15 @@ async def handle_query(req: QueryRequest):
         end = parsed.get("end_hour", 19)
         result = execute_time_slice(df, start, end)
     elif qtype == "braking_events":
-        threshold = parsed.get("threshold", -2.0)
+        threshold = parsed.get("threshold", BRAKING_THRESHOLD)
         result = execute_braking_events(df, threshold)
     elif qtype == "geo_filter":
         result = execute_geo_filter(
             df,
-            parsed.get("min_lat", 55.5), 
-            parsed.get("max_lat", 60.0),
-            parsed.get("min_lon", 30.0), 
-            parsed.get("max_lon", 37.5)
+            parsed.get("min_lat", M11_BOUNDS["min_lat"]), 
+            parsed.get("max_lat", M11_BOUNDS["max_lat"]),
+            parsed.get("min_lon", M11_BOUNDS["min_lon"]), 
+            parsed.get("max_lon", M11_BOUNDS["max_lon"])
         )
     else:
         raise HTTPException(status_code=400, detail=f"Unsupported query type: {qtype}")
